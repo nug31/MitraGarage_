@@ -15,10 +15,12 @@ import {
   Edit,
   Save,
   X,
-  XCircle
+  XCircle,
+  Receipt
 } from 'lucide-react';
 import { bookingsAPI } from '../utils/mysqlDatabase';
 import LoadingSpinner from './LoadingSpinner';
+import Invoice from './Invoice';
 
 const ServiceBooking = () => {
   const [showBookingForm, setShowBookingForm] = useState(false);
@@ -27,6 +29,8 @@ const ServiceBooking = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [editingBooking, setEditingBooking] = useState<any>(null);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [bookingData, setBookingData] = useState({
     customerName: '',
     phone: '',
@@ -145,6 +149,26 @@ const ServiceBooking = () => {
       console.error('Error updating status:', error);
       alert('Error updating status. Please try again.');
     }
+  };
+
+  const getEstimatedCost = (serviceType: string): number => {
+    const servicePrices: { [key: string]: number } = {
+      'Ganti Oli': 150000,
+      'Service Rem': 300000,
+      'Tune Up': 500000,
+      'Ganti Aki': 750000,
+      'Service AC': 250000,
+      'Balancing Ban': 100000,
+      'Service Rutin': 200000,
+      'Perbaikan Mesin': 800000,
+      'Ganti Ban': 600000
+    };
+    return servicePrices[serviceType] || 200000;
+  };
+
+  const handleViewInvoice = (booking: any) => {
+    setSelectedBooking(booking);
+    setShowInvoice(true);
   };
 
   const resetForm = () => {
@@ -319,13 +343,22 @@ const ServiceBooking = () => {
                       <option value="Sedang Dikerjakan">Sedang Dikerjakan</option>
                       <option value="Selesai">Selesai</option>
                     </select>
-                    <button
-                      onClick={() => handleEditBooking(booking)}
-                      className="text-blue-600 hover:text-blue-800 text-xs flex items-center"
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleViewInvoice(booking)}
+                        className="text-purple-600 hover:text-purple-800 text-xs flex items-center"
+                      >
+                        <Receipt className="h-3 w-3 mr-1" />
+                        Invoice
+                      </button>
+                      <button
+                        onClick={() => handleEditBooking(booking)}
+                        className="text-blue-600 hover:text-blue-800 text-xs flex items-center"
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </button>
+                    </div>
                   </div>
                   <div className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
                     {getStatusIcon(booking.status)}
@@ -510,6 +543,29 @@ const ServiceBooking = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Invoice Modal */}
+      {showInvoice && selectedBooking && (
+        <Invoice
+          booking={{
+            id: selectedBooking.id,
+            customerName: selectedBooking.customer_name,
+            customerPhone: selectedBooking.phone || '',
+            customerEmail: selectedBooking.email || '',
+            vehicleType: selectedBooking.vehicle_type || '',
+            licensePlate: selectedBooking.vehicle_number || '',
+            serviceType: selectedBooking.service_type,
+            serviceDate: selectedBooking.booking_date,
+            estimatedCost: selectedBooking.estimated_cost || getEstimatedCost(selectedBooking.service_type),
+            status: selectedBooking.status,
+            notes: selectedBooking.description
+          }}
+          onClose={() => {
+            setShowInvoice(false);
+            setSelectedBooking(null);
+          }}
+        />
       )}
     </div>
   );
