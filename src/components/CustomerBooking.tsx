@@ -18,6 +18,7 @@ import {
 import { bookingsAPI } from '../utils/mysqlDatabase';
 import LoadingSpinner from './LoadingSpinner';
 import BookingForm from './BookingForm';
+import Invoice from './Invoice';
 
 interface Booking {
   id: number;
@@ -128,21 +129,42 @@ Terima kasih! 🙏`;
         service_type: bookingData.serviceType,
         booking_date: bookingData.preferredDate,
         booking_time: bookingData.preferredTime,
-        status: 'Menunggu',
+        status: 'pending',
         phone: bookingData.phoneNumber,
         email: currentUser?.email || '',
-        description: bookingData.description
+        description: bookingData.description,
+        estimated_cost: getEstimatedCost(bookingData.serviceType)
       };
 
       console.log('Creating booking:', dbBookingData);
 
       // Save to database only - no localStorage
-      await bookingsAPI.create(dbBookingData);
+      const newBooking = await bookingsAPI.create(dbBookingData);
       console.log('Booking saved to MySQL database successfully');
+
+      // Close booking form
+      setShowBookingForm(false);
+
+      // Prepare booking data for invoice
+      const invoiceBooking = {
+        id: newBooking.id || Date.now(),
+        customerName: bookingData.customerName,
+        customerPhone: bookingData.phoneNumber,
+        vehicleType: bookingData.vehicleType,
+        licensePlate: bookingData.vehicleNumber,
+        serviceType: bookingData.serviceType,
+        serviceDate: bookingData.preferredDate,
+        estimatedCost: getEstimatedCost(bookingData.serviceType),
+        status: 'pending',
+        notes: bookingData.description
+      };
+
+      // Show invoice
+      setSelectedBooking(invoiceBooking as any);
+      setShowInvoice(true);
 
       // Refresh bookings
       fetchMyBookings();
-      alert('Booking berhasil dibuat!');
     } catch (error) {
       console.error('Error creating booking:', error);
       alert('Gagal membuat booking. Silakan coba lagi.');
@@ -282,9 +304,22 @@ Terima kasih! 🙏`;
                     )}
                   </div>
 
-                  {/* Payment Button for Completed Services */}
-                  {booking.status === 'Selesai' && (
-                    <div className="ml-4">
+                  {/* Action Buttons */}
+                  <div className="ml-4 flex gap-2">
+                    {/* View Invoice Button - Available for all bookings */}
+                    <button
+                      onClick={() => {
+                        setSelectedBooking(booking);
+                        setShowInvoice(true);
+                      }}
+                      className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+                    >
+                      <Receipt className="h-4 w-4 mr-2" />
+                      Lihat Invoice
+                    </button>
+
+                    {/* Payment Button for Completed Services */}
+                    {booking.status === 'Selesai' && (
                       <button
                         onClick={() => handlePayment(booking)}
                         className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
@@ -292,8 +327,8 @@ Terima kasih! 🙏`;
                         <CreditCard className="h-4 w-4 mr-2" />
                         Bayar Sekarang
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -303,105 +338,21 @@ Terima kasih! 🙏`;
 
       {/* Invoice Modal */}
       {showInvoice && selectedBooking && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-2">
-                  <Receipt className="h-6 w-6 text-blue-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Invoice Pembayaran</h3>
-                </div>
-                <button
-                  onClick={() => setShowInvoice(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Invoice Details */}
-              <div className="space-y-4">
-                {/* Booking Info */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-3">Detail Booking</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">ID Booking:</span>
-                      <span className="font-medium">#{selectedBooking.id}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Customer:</span>
-                      <span className="font-medium">{selectedBooking.customer_name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Kendaraan:</span>
-                      <span className="font-medium">
-                        {selectedBooking.vehicle_info || `${selectedBooking.vehicle_number || 'N/A'} (${selectedBooking.vehicle_type || 'N/A'})`}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Service:</span>
-                      <span className="font-medium">{selectedBooking.service_type}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Tanggal:</span>
-                      <span className="font-medium">
-                        {selectedBooking.booking_date ? new Date(selectedBooking.booking_date).toLocaleDateString('id-ID') : 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Payment Breakdown */}
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-3">Rincian Pembayaran</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Biaya Service:</span>
-                      <span className="font-medium">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(selectedBooking.estimated_cost || 0)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Biaya Admin:</span>
-                      <span className="font-medium">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(0)}</span>
-                    </div>
-                    <div className="border-t border-blue-200 pt-2 mt-2">
-                      <div className="flex justify-between font-semibold text-base">
-                        <span className="text-gray-900">Total Pembayaran:</span>
-                        <span className="text-blue-600">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(selectedBooking.estimated_cost || 0)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Notes */}
-                {selectedBooking.notes && (
-                  <div className="bg-yellow-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Catatan Service</h4>
-                    <p className="text-sm text-gray-700">{selectedBooking.notes}</p>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    onClick={() => setShowInvoice(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Tutup
-                  </button>
-                  <button
-                    onClick={() => sendToWhatsApp(selectedBooking)}
-                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    <span>Bayar via WhatsApp</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Invoice
+          booking={{
+            id: selectedBooking.id,
+            customerName: selectedBooking.customer_name,
+            customerPhone: selectedBooking.phone || '',
+            vehicleType: selectedBooking.vehicle_type || '',
+            licensePlate: selectedBooking.vehicle_number || '',
+            serviceType: selectedBooking.service_type,
+            serviceDate: selectedBooking.booking_date,
+            estimatedCost: selectedBooking.estimated_cost || getEstimatedCost(selectedBooking.service_type),
+            status: selectedBooking.status,
+            notes: selectedBooking.notes
+          }}
+          onClose={() => setShowInvoice(false)}
+        />
       )}
     </div>
   );
