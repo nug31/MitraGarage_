@@ -254,6 +254,26 @@ function App() {
           {/* Sidebar */}
           <div className={`lg:w-72 ${isMobileMenuOpen ? 'block' : 'hidden'} lg:block`}>
             <nav className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-6">
+              {/* Mobile User Info */}
+              <div className="lg:hidden mb-6 pb-6 border-b border-gray-200">
+                <div className="flex items-center space-x-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl px-4 py-3">
+                  <div className="h-12 w-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                    <User className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">{currentUser?.full_name}</p>
+                    <p className="text-sm text-gray-600 capitalize">{currentUser?.role}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full mt-3 flex items-center justify-center space-x-2 bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-xl transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="font-medium">Logout</span>
+                </button>
+              </div>
+
               <div className="mb-6">
                 <h2 className="text-lg font-bold text-gray-800 mb-2">Navigation</h2>
                 <div className="w-12 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
@@ -297,7 +317,7 @@ function App() {
 
           {/* Main Content */}
           <div className="flex-1">
-            <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-8 min-h-[600px] hover:shadow-2xl transition-all duration-500 animate-fade-in-scale">
+            <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-4 sm:p-8 min-h-[600px] mb-20 lg:mb-0 hover:shadow-2xl transition-all duration-500 animate-fade-in-scale">
               <div className="animate-slide-in-up">
                 <ErrorBoundary>
                   {renderContent()}
@@ -307,6 +327,65 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Bottom Navigation for Mobile */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl z-50">
+        <div className="flex justify-around items-center px-2 py-3">
+          {menuItems.slice(0, 5).map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`flex flex-col items-center justify-center min-w-[60px] px-2 py-2 rounded-xl transition-all duration-300 ${
+                  isActive
+                    ? 'transform scale-110'
+                    : 'opacity-70 hover:opacity-100'
+                }`}
+              >
+                <div className={`p-2 rounded-xl mb-1 transition-all duration-300 ${
+                  isActive
+                    ? `bg-gradient-to-r ${item.color} shadow-lg`
+                    : 'bg-gray-100'
+                }`}>
+                  <Icon className={`h-5 w-5 ${
+                    isActive ? 'text-white' : 'text-gray-600'
+                  }`} />
+                </div>
+                <span className={`text-[10px] font-medium transition-all duration-300 ${
+                  isActive
+                    ? 'text-transparent bg-clip-text bg-gradient-to-r ' + item.color
+                    : 'text-gray-600'
+                }`}>
+                  {item.label.split(' ')[0]}
+                </span>
+                {isActive && (
+                  <div className="absolute bottom-0 w-1 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
+                )}
+              </button>
+            );
+          })}
+
+          {/* More Menu Button if there are more than 5 items */}
+          {menuItems.length > 5 && (
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="flex flex-col items-center justify-center min-w-[60px] px-2 py-2 rounded-xl transition-all duration-300 opacity-70 hover:opacity-100"
+            >
+              <div className="p-2 rounded-xl mb-1 bg-gray-100">
+                <Menu className="h-5 w-5 text-gray-600" />
+              </div>
+              <span className="text-[10px] font-medium text-gray-600">
+                More
+              </span>
+            </button>
+          )}
+        </div>
+      </nav>
     </div>
   );
 }
