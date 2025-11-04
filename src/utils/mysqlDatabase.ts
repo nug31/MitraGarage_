@@ -1,5 +1,5 @@
 // MySQL Database API for Railway connection
-const API_BASE_URL = 'http://localhost:3003/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mitragarage-production.up.railway.app/api';
 
 // Helper function for API calls
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
