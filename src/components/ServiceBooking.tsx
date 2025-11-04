@@ -108,7 +108,8 @@ const ServiceBooking = () => {
         status: bookingData.status,
         phone: bookingData.phone,
         vehicle_type: bookingData.vehicleType,
-        description: bookingData.description
+        description: bookingData.description,
+        estimated_cost: getEstimatedCost(bookingData.serviceType)
       };
 
       if (editingBooking) {
