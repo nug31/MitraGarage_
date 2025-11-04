@@ -184,36 +184,51 @@ router.put('/:id', async (req, res) => {
 router.patch('/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
-    
+
+    console.log('📝 Update status request:', {
+      bookingId: req.params.id,
+      newStatus: status
+    });
+
     if (!status) {
       return res.status(400).json({ error: 'Status is required' });
     }
-    
+
     // Check if booking exists
     const [existing] = await pool.execute(
-      'SELECT id FROM bookings WHERE id = ?',
+      'SELECT id, status FROM bookings WHERE id = ?',
       [req.params.id]
     );
-    
+
     if (existing.length === 0) {
+      console.error('❌ Booking not found:', req.params.id);
       return res.status(404).json({ error: 'Booking not found' });
     }
-    
+
+    console.log('📊 Current booking status:', existing[0].status);
+
     await pool.execute(
       'UPDATE bookings SET status = ? WHERE id = ?',
       [status, req.params.id]
     );
-    
+
+    console.log('✅ Status updated successfully');
+
     // Get the updated booking
     const [updatedBooking] = await pool.execute(
       'SELECT * FROM bookings WHERE id = ?',
       [req.params.id]
     );
-    
+
     res.json(updatedBooking[0]);
   } catch (error) {
-    console.error('Error updating booking status:', error);
-    res.status(500).json({ error: 'Failed to update booking status' });
+    console.error('❌ Error updating booking status:', error);
+    console.error('❌ Error details:', error.message);
+    console.error('❌ Error code:', error.code);
+    res.status(500).json({
+      error: 'Failed to update booking status',
+      details: error.message
+    });
   }
 });
 
