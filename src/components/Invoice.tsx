@@ -6,6 +6,7 @@ interface InvoiceProps {
     id: number;
     customerName: string;
     customerPhone: string;
+    customerEmail?: string;
     vehicleType: string;
     licensePlate: string;
     serviceType: string;
@@ -151,6 +152,12 @@ const Invoice: React.FC<InvoiceProps> = ({ booking, onClose }) => {
                   <p className="text-sm text-gray-600">No. Telepon</p>
                   <p className="font-semibold text-gray-900">{booking.customerPhone}</p>
                 </div>
+                {booking.customerEmail && (
+                  <div>
+                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="font-semibold text-gray-900">{booking.customerEmail}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-gray-600">Jenis Kendaraan</p>
                   <p className="font-semibold text-gray-900">{booking.vehicleType}</p>

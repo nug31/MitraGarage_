@@ -355,6 +355,7 @@ Terima kasih! 🙏`;
             id: selectedBooking.id,
             customerName: selectedBooking.customer_name,
             customerPhone: selectedBooking.phone || '',
+            customerEmail: selectedBooking.email || currentUser?.email || '',
             vehicleType: selectedBooking.vehicle_type || '',
             licensePlate: selectedBooking.vehicle_number || '',
             serviceType: selectedBooking.service_type,
