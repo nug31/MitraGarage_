@@ -121,6 +121,9 @@ Terima kasih! 🙏`;
 
   const handleBookingSubmit = async (bookingData: any) => {
     try {
+      console.log('🔄 Starting booking submission...');
+      console.log('📝 Form data received:', bookingData);
+
       // Convert form data to database format
       const dbBookingData = {
         customer_name: bookingData.customerName,
@@ -129,18 +132,18 @@ Terima kasih! 🙏`;
         service_type: bookingData.serviceType,
         booking_date: bookingData.preferredDate,
         booking_time: bookingData.preferredTime,
-        status: 'pending',
+        status: 'Menunggu', // Changed from 'pending' to match current Railway database ENUM
         phone: bookingData.phoneNumber,
         email: currentUser?.email || '',
         description: bookingData.description,
         estimated_cost: getEstimatedCost(bookingData.serviceType)
       };
 
-      console.log('Creating booking:', dbBookingData);
+      console.log('📤 Sending to API:', dbBookingData);
 
       // Save to database only - no localStorage
       const newBooking = await bookingsAPI.create(dbBookingData);
-      console.log('Booking saved to MySQL database successfully');
+      console.log('✅ Booking saved successfully:', newBooking);
 
       // Close booking form
       setShowBookingForm(false);
@@ -159,15 +162,24 @@ Terima kasih! 🙏`;
         notes: bookingData.description
       };
 
+      console.log('📄 Showing invoice for booking:', invoiceBooking);
+
       // Show invoice
       setSelectedBooking(invoiceBooking as any);
       setShowInvoice(true);
 
       // Refresh bookings
-      fetchMyBookings();
-    } catch (error) {
-      console.error('Error creating booking:', error);
-      alert('Gagal membuat booking. Silakan coba lagi.');
+      await fetchMyBookings();
+
+      console.log('🎉 Booking process completed successfully!');
+    } catch (error: any) {
+      console.error('❌ Error creating booking:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+
+      // Show more detailed error message
+      const errorMessage = error.message || 'Gagal membuat booking. Silakan coba lagi.';
+      alert(`Gagal membuat booking: ${errorMessage}\n\nSilakan periksa koneksi internet Anda dan coba lagi.`);
     }
   };
 

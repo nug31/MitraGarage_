@@ -76,7 +76,7 @@ const initializeTables = async () => {
         service_type VARCHAR(255) NOT NULL,
         booking_time TIME NOT NULL,
         booking_date DATE NOT NULL,
-        status ENUM('Dijadwalkan', 'Menunggu', 'Sedang Dikerjakan', 'Selesai') DEFAULT 'Dijadwalkan',
+        status ENUM('pending', 'Dijadwalkan', 'Menunggu', 'Dikonfirmasi', 'Sedang Dikerjakan', 'Selesai', 'Dibatalkan', 'confirmed', 'in_progress', 'completed', 'cancelled') DEFAULT 'pending',
         phone VARCHAR(20),
         email VARCHAR(255),
         vehicle_type VARCHAR(100),
