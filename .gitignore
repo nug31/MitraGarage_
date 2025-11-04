@@ -1,0 +1,53 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
+
+# Debug and test files
+debug-*.cjs
+test-*.cjs
+fix-*.cjs
+restore-*.cjs
+init-*.cjs
+check-*.cjs
+setup-*.cjs
+migrate-*.cjs
+permanent-*.cjs
+final-*.cjs
+simple-*.cjs
+monitor-*.cjs
+search-*.cjs
+booking-*.cjs
+start-*.cjs
+app-*.cjs
+login-*.cjs
+database-*.cjs
+vehicle-*.cjs
+payment-*.cjs
+*.md
+!README.md
+
+# Temporary files
+*.tmp
+*.temp
